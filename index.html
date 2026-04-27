@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PredictIT — Mercato di Predizione</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f2eb;--paper:#faf8f3;--ink:#1a1714;--ink2:#4a4540;--ink3:#8a8278;
+  --rule:#d4cec4;
+  --yes:#1a6b3a;--yes-bg:#eaf4ee;--yes-border:#b8ddc4;
+  --no:#8b1a1a;--no-bg:#f6eaea;--no-border:#ddb8b8;
+  --accent:#c4860a;--accent-bg:#fdf3e0;
+  --radius:4px;
+}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
+
+/* ── OVERLAY NICKNAME ── */
+.overlay{position:fixed;inset:0;background:rgba(26,23,20,0.85);display:flex;align-items:center;justify-content:center;z-index:200}
+.overlay-card{background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius);padding:32px 28px;max-width:360px;width:90%;text-align:center}
+.overlay-logo{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--ink);margin-bottom:6px}
+.overlay-sub{color:var(--ink3);font-size:12px;margin-bottom:22px;line-height:1.7}
+.overlay-field{margin-bottom:0}
+.overlay-field input{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:16px;padding:10px 14px;outline:none;text-align:center;transition:border-color 0.15s}
+.overlay-field input:focus{border-color:var(--accent)}
+.btn-enter{width:100%;margin-top:14px;padding:12px;border-radius:var(--radius);border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;transition:background 0.15s}
+.btn-enter:hover{background:var(--ink2)}
+
+/* ── MASTHEAD ── */
+.masthead{background:var(--paper);border-bottom:3px double var(--ink);padding:16px 28px 12px}
+.masthead-inner{max-width:1060px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.masthead-logo{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;letter-spacing:-1px;color:var(--ink)}
+.masthead-right{display:flex;align-items:center;gap:12px}
+.conn-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3)}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background 0.3s;flex-shrink:0}
+.conn-dot.online{background:var(--yes)}
+.wallet-pill{background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius);padding:5px 11px;font-size:12px;display:flex;gap:6px;align-items:center}
+.wallet-pill span:first-child{color:var(--ink3)}
+.wallet-pill strong{color:var(--accent)}
+.masthead-rule{max-width:1060px;margin:0 auto;font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:3px 0}
+
+/* ── LAYOUT ── */
+.layout{max-width:1060px;margin:0 auto;padding:20px 16px 80px;display:grid;grid-template-columns:1fr 320px;gap:18px}
+
+/* ── SECTION ── */
+.section{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.section-head{border-bottom:1px solid var(--rule);padding:8px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;justify-content:space-between}
+.section-body{padding:14px}
+
+/* ── EVENT ── */
+.event-cat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-weight:500}
+.event-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;line-height:1.3;color:var(--ink);margin-bottom:8px}
+.event-meta{font-size:11px;color:var(--ink3);display:flex;gap:16px}
+
+/* ── PROB BAR ── */
+.prob-row{display:flex;align-items:center;gap:10px;margin:14px 0 5px}
+.prob-pct{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;min-width:52px}
+.prob-pct.yes{color:var(--yes)}.prob-pct.no{color:var(--no);text-align:right}
+.bar-track{flex:1;height:8px;background:var(--no-bg);border:1px solid var(--no-border);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;background:var(--yes);border-radius:99px;transition:width 0.5s cubic-bezier(.4,0,.2,1)}
+.prob-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3)}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);padding:9px 11px}
+.stat-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
+.stat-val{font-size:15px;font-family:'Playfair Display',serif;font-weight:700;color:var(--ink)}
+
+/* ── ORDER BOOK ── */
+.book-grid{display:grid;grid-template-columns:1fr 1px 1fr}
+.book-col{padding:10px 12px}
+.book-divider{background:var(--rule)}
+.book-col-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.yes{background:var(--yes)}.dot.no{background:var(--no)}
+
+/* book rows */
+.book-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:5px 6px;border-radius:var(--radius);margin-bottom:3px;font-size:11px;border:1px solid transparent;animation:rowIn 0.25s ease}
+@keyframes rowIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.book-row.yes{background:var(--yes-bg);border-color:var(--yes-border)}
+.book-row.no{background:var(--no-bg);border-color:var(--no-border)}
+.book-row.yes .br-price{color:var(--yes);font-weight:500}
+.book-row.no  .br-price{color:var(--no);font-weight:500}
+.br-user{color:var(--ink3);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br-vol{color:var(--ink2);text-align:right}
+.book-header{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:3px 6px;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.empty-book{color:var(--ink3);font-size:11px;font-style:italic;text-align:center;padding:12px 0}
+
+/* ── TRADE HISTORY ── */
+.trade-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:12px;animation:rowIn 0.25s ease}
+.trade-row:last-child{border-bottom:none}
+.tbadge{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:500}
+.tbadge.yes{background:var(--yes-bg);color:var(--yes);border:1px solid var(--yes-border)}
+.tbadge.no{background:var(--no-bg);color:var(--no);border:1px solid var(--no-border)}
+.tmeta{color:var(--ink3);font-size:10px;margin-top:2px}
+
+/* ── FORM ── */
+.bet-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule)}
+.bet-tab{padding:10px;text-align:center;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;background:none;border:none;color:var(--ink3);border-bottom:2px solid transparent;transition:all 0.15s}
+.bet-tab.active-yes{color:var(--yes);border-bottom-color:var(--yes);background:var(--yes-bg)}
+.bet-tab.active-no{color:var(--no);border-bottom-color:var(--no);background:var(--no-bg)}
+
+.form-body{padding:14px}
+.field{margin-bottom:11px}
+.field-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;display:block}
+.field-hint{font-size:10px;color:var(--ink3);margin-top:3px}
+.input-wrap{position:relative}
+.input-prefix{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none;font-size:13px}
+.input-suffix{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none;font-size:11px}
+input[type=number]{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:8px 38px 8px 26px;outline:none;transition:border-color 0.15s;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{display:none}
+input[type=number]:focus{border-color:var(--accent)}
+
+.summary-box{background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);padding:10px 12px;margin-bottom:11px;font-size:12px}
+.sum-row{display:flex;justify-content:space-between;padding:3px 0}
+.sum-row:not(:last-child){border-bottom:1px dashed var(--rule)}
+.sum-key{color:var(--ink3)}
+.sum-val{font-weight:500}
+.sum-val.yes{color:var(--yes)}.sum-val.no{color:var(--no)}
+
+.btn-submit{width:100%;padding:11px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;transition:all 0.15s}
+.btn-submit.yes{background:var(--yes);color:#fff}.btn-submit.yes:hover{background:#145c30}
+.btn-submit.no{background:var(--no);color:#fff}.btn-submit.no:hover{background:#731515}
+.btn-submit:disabled{opacity:0.35;cursor:not-allowed}
+.err{font-size:11px;color:var(--no);margin-top:6px;min-height:16px}
+
+/* my open orders */
+.my-orders-box{background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius);padding:10px 12px;margin-top:11px;font-size:11px}
+.my-orders-title{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-weight:500}
+.my-order-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed rgba(196,134,10,0.3)}
+.my-order-row:last-child{border-bottom:none}
+.cancel-btn{font-size:10px;color:var(--no);cursor:pointer;background:none;border:none;font-family:inherit;text-decoration:underline}
+
+/* best price banner */
+.best-price-banner{display:none;align-items:center;justify-content:space-between;padding:9px 12px;margin-bottom:11px;border-radius:var(--radius);border:1px solid;cursor:pointer;transition:opacity 0.15s}
+.best-price-banner:hover{opacity:0.82}
+.best-price-banner.yes{background:var(--yes-bg);border-color:var(--yes-border)}
+.best-price-banner.no{background:var(--no-bg);border-color:var(--no-border)}
+.bp-label{font-size:10px;letter-spacing:0.5px;text-transform:uppercase}
+.bp-label.yes{color:var(--yes)}.bp-label.no{color:var(--no)}
+.bp-price{font-family:'Playfair Display',serif;font-size:18px;font-weight:700}
+.bp-price.yes{color:var(--yes)}.bp-price.no{color:var(--no)}
+.bp-cta{font-size:10px;color:var(--ink3);text-align:right;line-height:1.5}
+.bp-none{font-size:11px;color:var(--ink3);font-style:italic;margin-bottom:11px;padding:6px 0}
+
+/* note */
+.note{margin-top:11px;font-size:11px;color:var(--ink3);line-height:1.8;border-top:1px dashed var(--rule);padding-top:10px}
+.note strong{color:var(--ink2)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:10px 15px;max-width:300px;font-size:12px;line-height:1.6;opacity:0;transform:translateY(10px);transition:all 0.3s cubic-bezier(.4,0,.2,1);z-index:400;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-title{font-weight:500;margin-bottom:2px}
+.toast-sub{opacity:0.65;font-size:11px}
+
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .col-side{order:-1}
+  .masthead-logo{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<!-- NICKNAME OVERLAY -->
+<div class="overlay" id="nick-overlay">
+  <div class="overlay-card">
+    <div class="overlay-logo">PredictIT</div>
+    <div class="overlay-sub">
+      Mercato di predizione con order book reale.<br>
+      Scegli un nickname per partecipare.
+    </div>
+    <div class="overlay-field">
+      <input type="text" id="nick-input" maxlength="20" placeholder="Il tuo nome..."
+        autofocus onkeydown="if(event.key==='Enter')enterMarket()">
+    </div>
+    <button class="btn-enter" onclick="enterMarket()">Entra nel mercato →</button>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-logo">PredictIT</div>
+    <div class="masthead-right">
+      <div class="conn-pill">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span id="conn-label">connessione...</span>
+      </div>
+      <div class="wallet-pill">
+        <span>Saldo</span>
+        <strong id="balance-display">€ 100,00</strong>
+      </div>
+    </div>
+  </div>
+  <div class="masthead-rule">mercato di predizione · clob con matching parziale · solo scopo didattico</div>
+</header>
+
+<div class="layout">
+
+  <!-- COLONNA PRINCIPALE -->
+  <div class="col-main">
+
+    <!-- EVENTO -->
+    <div class="section">
+      <div class="section-head">
+        <span>Evento attivo</span>
+        <span id="users-label">— utenti online</span>
+      </div>
+      <div class="section-body">
+        <div class="event-cat">⚽ Serie A · Stagione 2025/26</div>
+        <div class="event-title">L'Inter vincerà lo Scudetto nella stagione 2025/26?</div>
+        <div class="event-meta">
+          <span>Risoluzione: 25 mag 2026</span>
+          <span>Modello: CLOB con matching parziale</span>
+        </div>
+
+        <div class="prob-row">
+          <div class="prob-pct yes" id="pct-yes">—</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:50%"></div></div>
+          <div class="prob-pct no" id="pct-no">—</div>
+        </div>
+        <div class="prob-labels"><span>◆ Sì — Inter vince</span><span>No ◆</span></div>
+
+        <div class="stats-row">
+          <div class="stat"><div class="stat-lbl">Miglior prezzo Sì</div><div class="stat-val" id="stat-best-yes">—</div></div>
+          <div class="stat"><div class="stat-lbl">Miglior prezzo No</div><div class="stat-val" id="stat-best-no">—</div></div>
+          <div class="stat"><div class="stat-lbl">Volume tradato</div><div class="stat-val" id="stat-vol">€ 0</div></div>
+          <div class="stat"><div class="stat-lbl">Trade eseguiti</div><div class="stat-val" id="stat-trades">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER BOOK -->
+    <div class="section">
+      <div class="section-head">
+        <span>Order Book</span>
+        <span style="font-size:10px">ordinato per prezzo limite</span>
+      </div>
+      <div class="section-body" style="padding:0">
+        <div class="book-grid">
+          <div class="book-col">
+            <div class="book-col-title"><div class="dot yes"></div>Ordini SÌ</div>
+            <div class="book-header"><span>Utente</span><span>Prezzo</span><span style="text-align:right">Volume</span></div>
+            <div id="book-yes"><div class="empty-book">Nessun ordine</div></div>
+          </div>
+          <div class="book-divider"></div>
+          <div class="book-col">
+            <div class="book-col-title"><div class="dot no"></div>Ordini NO</div>
+            <div class="book-header"><span>Utente</span><span>Prezzo</span><span style="text-align:right">Volume</span></div>
+            <div id="book-no"><div class="empty-book">Nessun ordine</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORICO TRADE -->
+    <div class="section">
+      <div class="section-head">Storico trade eseguiti</div>
+      <div class="section-body">
+        <div id="trade-history">
+          <div style="color:var(--ink3);font-size:12px;font-style:italic">Nessun trade ancora eseguito.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col-main -->
+
+  <!-- COLONNA LATERALE -->
+  <div class="col-side">
+    <div class="section">
+      <div class="section-head">Piazza un ordine</div>
+      <div class="bet-tabs">
+        <button class="bet-tab active-yes" id="tab-yes" onclick="selectSide('yes')">◆ Sì</button>
+        <button class="bet-tab" id="tab-no" onclick="selectSide('no')">◆ No</button>
+      </div>
+      <div class="form-body">
+
+        <!-- MIGLIOR PREZZO DISPONIBILE -->
+        <div id="best-price-banner" class="best-price-banner yes" onclick="useBestPrice()">
+          <div>
+            <div class="bp-label yes" id="bp-label">Miglior prezzo Sì nel book</div>
+            <div class="bp-price yes" id="bp-price">—</div>
+          </div>
+          <div class="bp-cta">Clicca per<br>usare questo<br>prezzo →</div>
+        </div>
+        <div id="bp-none" class="bp-none" style="display:none">Nessun ordine compatibile nel book</div>
+
+        <div class="field">
+          <label class="field-label">Prezzo limite</label>
+          <div class="input-wrap">
+            <span class="input-prefix">€</span>
+            <input type="number" id="price-input" min="0.01" max="0.99" step="0.01"
+              placeholder="0.60" oninput="updatePreview()">
+            <span class="input-suffix">/ €1</span>
+          </div>
+          <div class="field-hint" id="price-hint">Quanto paghi per guadagnare €1 se vinci</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Volume massimo</label>
+          <div class="input-wrap">
+            <span class="input-prefix">€</span>
+            <input type="number" id="volume-input" min="0.10" step="0.10"
+              placeholder="10.00" oninput="updatePreview()">
+            <span class="input-suffix">max</span>
+          </div>
+          <div class="field-hint">Quanto sei disposto a spendere in totale</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="sum-row">
+            <span class="sum-key">Prezzo limite</span>
+            <span class="sum-val" id="s-price">—</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-key">Volume massimo</span>
+            <span class="sum-val" id="s-vol">—</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-key">Guadagno max se vinci</span>
+            <span class="sum-val" id="s-win">—</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-key">Ritorno totale max</span>
+            <span class="sum-val" id="s-total">—</span>
+          </div>
+        </div>
+
+        <div class="err" id="err-msg"></div>
+        <button class="btn-submit yes" id="btn-submit" onclick="placeOrder()" disabled>
+          Inserisci ordine Sì
+        </button>
+
+        <!-- MIEI ORDINI APERTI -->
+        <div id="my-orders-box" class="my-orders-box" style="display:none">
+          <div class="my-orders-title">⏳ Tuoi ordini aperti</div>
+          <div id="my-orders-list"></div>
+        </div>
+
+        <div class="note">
+          <strong>Come funziona:</strong><br>
+          Specifica il <strong>prezzo limite</strong> (es. €0,60 per vincere €1) e il <strong>volume massimo</strong> che vuoi spendere. Il sistema abbina il tuo ordine con quelli compatibili dell'esito opposto, anche parzialmente. La quota si aggiorna ad ogni trade.
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /col-side -->
+
+</div><!-- /layout -->
+
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title"></div>
+  <div class="toast-sub" id="toast-sub"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════════
+firebase.initializeApp({
+  apiKey:      "AIzaSyCZAxZLbb6lCDKeltewFNdf6dmclYj_pMI",
+  authDomain:  "predictionmarket-test.firebaseapp.com",
+  projectId:   "predictionmarket-test",
+  databaseURL: "https://predictionmarket-test-default-rtdb.europe-west1.firebasedatabase.app"
+});
+const db = firebase.database();
+
+// ═══════════════════════════════════════════════
+//  STATE LOCALE
+// ═══════════════════════════════════════════════
+let userName  = '';
+let myBalance = 100;
+let mySide    = 'yes';
+
+// snapshot corrente dell'order book (aggiornato via listener)
+let currentOrders = {};
+
+// ═══════════════════════════════════════════════
+//  ENTER
+// ═══════════════════════════════════════════════
+function enterMarket() {
+  const nick = document.getElementById('nick-input').value.trim();
+  if (!nick) { document.getElementById('nick-input').focus(); return; }
+  userName = nick;
+  document.getElementById('nick-overlay').style.display = 'none';
+
+  // Presenza
+  const presRef = db.ref('presence/' + encodeURIComponent(userName) + '_' + Date.now());
+  presRef.set(true);
+  presRef.onDisconnect().remove();
+
+  db.ref('.info/connected').on('value', snap => {
+    const on = !!snap.val();
+    document.getElementById('conn-dot').className = 'conn-dot' + (on ? ' online' : '');
+    document.getElementById('conn-label').textContent = on ? userName + ' · online' : 'disconnesso';
+  });
+
+  // Listener ordini
+  db.ref('orders').on('value', snap => {
+    currentOrders = snap.val() || {};
+    renderBook(currentOrders);
+    renderMyOrders(currentOrders);
+    updateMarketStats(currentOrders);
+    updateBestPriceBanner();
+  });
+
+  // Listener trade
+  db.ref('trades').on('value', snap => {
+    const trades = snap.val()
+      ? Object.values(snap.val()).sort((a, b) => b.ts - a.ts)
+      : [];
+    renderTrades(trades);
+    updateQuoteFromTrades(trades);
+    document.getElementById('stat-trades').textContent = trades.length;
+    document.getElementById('stat-vol').textContent =
+      '€\u00a0' + trades.reduce((s, t) => s + t.amount, 0).toFixed(2).replace('.', ',');
+  });
+
+  // Listener presenza
+  db.ref('presence').on('value', snap => {
+    const n = snap.val() ? Object.keys(snap.val()).length : 0;
+    document.getElementById('users-label').textContent =
+      n + ' utent' + (n === 1 ? 'e' : 'i') + ' online';
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  SIDE
+// ═══════════════════════════════════════════════
+function selectSide(side) {
+  mySide = side;
+  document.getElementById('tab-yes').className = 'bet-tab' + (side === 'yes' ? ' active-yes' : '');
+  document.getElementById('tab-no').className  = 'bet-tab' + (side === 'no'  ? ' active-no'  : '');
+  const btn = document.getElementById('btn-submit');
+  btn.className = 'btn-submit ' + side;
+  btn.textContent = 'Inserisci ordine ' + (side === 'yes' ? 'Sì' : 'No');
+  document.getElementById('price-hint').textContent =
+    side === 'yes'
+      ? 'Quanto paghi per guadagnare €1 se l\'Inter vince'
+      : 'Quanto paghi per guadagnare €1 se l\'Inter non vince';
+  document.getElementById('err-msg').textContent = '';
+  updatePreview();
+  updateBestPriceBanner();
+}
+
+// ═══════════════════════════════════════════════
+//  BEST PRICE BANNER
+// ═══════════════════════════════════════════════
+// Mostra il miglior prezzo disponibile nel book per l'esito selezionato.
+// "Miglior prezzo per comprare Sì" = il maker No con il prezzo più basso
+// (cioè il complemento più basso = meno costoso per il taker Sì).
+// Equivalentemente: cerco nel book gli ordini No compatibili e prendo
+// quello col prezzo più basso → il taker Sì pagherà 1 - priceNo.
+
+function updateBestPriceBanner() {
+  const banner  = document.getElementById('best-price-banner');
+  const bpNone  = document.getElementById('bp-none');
+  const bpLabel = document.getElementById('bp-label');
+  const bpPrice = document.getElementById('bp-price');
+
+  // Ordini aperti dell'esito opposto (sono i potenziali maker)
+  const oppSide = mySide === 'yes' ? 'no' : 'yes';
+  const makers  = Object.values(currentOrders).filter(o =>
+    (o.status === 'open' || o.status === 'partial') &&
+    o.side === oppSide &&
+    o.user !== userName
+  );
+
+  if (!makers.length) {
+    banner.style.display  = 'none';
+    bpNone.style.display  = 'block';
+    return;
+  }
+
+  // Il miglior prezzo per il taker è il maker con il prezzo più basso
+  // (lascia il maggior "vantaggio" al taker)
+  const bestMaker = makers.reduce((a, b) => a.price < b.price ? a : b);
+  // Il taker pagherà il complemento del prezzo maker
+  const takerPrice = parseFloat((1 - bestMaker.price).toFixed(4));
+
+  // Aggiorna banner
+  banner.style.display = 'flex';
+  bpNone.style.display = 'none';
+  banner.className     = 'best-price-banner ' + mySide;
+  bpLabel.className    = 'bp-label ' + mySide;
+  bpPrice.className    = 'bp-price ' + mySide;
+  bpLabel.textContent  = mySide === 'yes'
+    ? 'Miglior prezzo disponibile — Sì'
+    : 'Miglior prezzo disponibile — No';
+  bpPrice.textContent  = '€ ' + takerPrice.toFixed(2).replace('.', ',') + ' / €1';
+
+  // Salva per useBestPrice
+  banner.dataset.price = takerPrice;
+}
+
+function useBestPrice() {
+  const price = parseFloat(document.getElementById('best-price-banner').dataset.price);
+  if (!price) return;
+  document.getElementById('price-input').value = price.toFixed(2);
+  updatePreview();
+  document.getElementById('volume-input').focus();
+}
+
+// ═══════════════════════════════════════════════
+//  PREVIEW
+// ═══════════════════════════════════════════════
+function updatePreview() {
+  const price  = parseFloat(document.getElementById('price-input').value);
+  const volume = parseFloat(document.getElementById('volume-input').value);
+  const btn    = document.getElementById('btn-submit');
+  const cls    = mySide;
+
+  if (!price || !volume || price <= 0 || price >= 1 || volume <= 0) {
+    ['s-price','s-vol','s-win','s-total'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+      document.getElementById(id).className = 'sum-val';
+    });
+    btn.disabled = true;
+    return;
+  }
+
+  // volume è quanto spendi → guadagno = volume * (1 - price) / price
+  const maxWin   = volume * (1 - price) / price;
+  const maxTotal = volume + maxWin;
+
+  setEl('s-price', fmt(price) + ' / €1', cls);
+  setEl('s-vol',   fmt(volume), cls);
+  setEl('s-win',   fmt(maxWin), cls);
+  setEl('s-total', fmt(maxTotal));
+  btn.disabled = false;
+}
+
+// ═══════════════════════════════════════════════
+//  PLACE ORDER
+// ═══════════════════════════════════════════════
+function placeOrder() {
+  if (!userName) return;
+  const price  = parseFloat(document.getElementById('price-input').value);
+  const volume = parseFloat(document.getElementById('volume-input').value);
+  const errEl  = document.getElementById('err-msg');
+  errEl.textContent = '';
+
+  if (!price || !volume || price <= 0 || price >= 1)  { errEl.textContent = 'Prezzo limite non valido (deve essere tra 0 e 1).'; return; }
+  if (volume <= 0)    { errEl.textContent = 'Volume non valido.'; return; }
+  if (volume > myBalance) { errEl.textContent = 'Saldo insufficiente (' + fmt(myBalance) + ').'; return; }
+
+  const orderRef = db.ref('orders').push();
+  const order = {
+    id:            orderRef.key,
+    user:          userName,
+    side:          mySide,
+    price:         parseFloat(price.toFixed(4)),   // quanto paga per vincere €1
+    volumeTotal:   parseFloat(volume.toFixed(2)),  // volume originale
+    volumeLeft:    parseFloat(volume.toFixed(2)),  // volume ancora aperto
+    ts:            Date.now(),
+    status:        'open'   // open | partial | filled | cancelled
+  };
+
+  // Blocca il volume dal saldo
+  myBalance = parseFloat((myBalance - volume).toFixed(2));
+  document.getElementById('balance-display').textContent = fmt(myBalance);
+  document.getElementById('price-input').value  = '';
+  document.getElementById('volume-input').value = '';
+  document.getElementById('btn-submit').disabled = true;
+  updatePreview();
+
+  orderRef.set(order).then(() => {
+    // Tenta matching dopo aver scritto l'ordine
+    runMatching(order);
+    showToast(
+      'Ordine aperto — ' + (mySide === 'yes' ? 'Sì' : 'No'),
+      'Prezzo: ' + fmt(price) + '/€1  ·  Volume: ' + fmt(volume)
+    );
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  MATCHING ENGINE  (CLOB con matching parziale)
+// ═══════════════════════════════════════════════
+//
+// Logica maker/taker reale:
+//
+//   Il MAKER è l'ordine già presente nel book.
+//   Il TAKER è il nuovo ordine che arriva e scatena il match.
+//
+//   Il trade avviene al PREZZO DEL MAKER.
+//   - Maker (Sì) a 0.60 → paga €0.60 per ogni €1 di token
+//   - Taker (No) paga il complemento: 1 - 0.60 = €0.40
+//   - Pot totale = €1.00 ✓ — il vincitore incassa tutto
+//
+//   Il taker ottiene sempre un prezzo ≤ al suo limite (mai peggio).
+//   Es: taker No ha limite 0.80, paga 0.40 → meglio del suo limite ✓
+//
+//   Compatibilità: il prezzo del taker deve coprire il complemento del maker.
+//   priceNo_taker >= 1 - priceSì_maker  →  priceSì_maker + priceNo_taker >= 1
+//
+//   Ordinamento candidati: prima il prezzo più favorevole per il taker
+//   (il maker con il prezzo più basso sull'esito opposto), poi FIFO a parità.
+//
+//   Il matching è parziale: si consuma min(volumeLeft_taker, volumeLeft_maker).
+//   Un ordine può matchare con più maker in sequenza finché il volume è esaurito.
+
+function runMatching(newOrder) {
+  db.ref('orders').once('value').then(snap => {
+    const all = snap.val() || {};
+    const oppSide = newOrder.side === 'yes' ? 'no' : 'yes';
+
+    // Candidati maker: esito opposto, aperti, non dello stesso utente, compatibili
+    const candidates = Object.values(all)
+      .filter(o =>
+        (o.status === 'open' || o.status === 'partial') &&
+        o.side  === oppSide &&
+        o.user  !== newOrder.user &&
+        isCompatible(newOrder, o)
+      )
+      // Ordina: prima il maker più conveniente per il taker (prezzo più basso = complemento più alto),
+      // poi FIFO a parità di prezzo
+      .sort((a, b) => a.price !== b.price ? a.price - b.price : a.ts - b.ts);
+
+    if (!candidates.length) return;
+
+    let remainingTaker = newOrder.volumeLeft;
+    const updates = {};
+    const toasts  = [];
+
+    for (const maker of candidates) {
+      if (remainingTaker <= 0.001) break;
+
+      // Il trade avviene al prezzo del MAKER
+      // makerPrice = quanto paga il maker per ogni €1 di token
+      // takerCost  = complemento: quanto paga il taker per ogni €1 di token
+      const makerPrice = maker.price;
+      const takerCost  = parseFloat((1 - makerPrice).toFixed(4));
+
+      // Il "volume" qui è in unità di TOKEN (€1 ciascuno).
+      // Il maker ha volumeLeft espresso in euro spesi → token disponibili = volumeLeft / makerPrice
+      // Il taker ha remainingTaker espresso in euro → token acquistabili   = remainingTaker / takerCost
+      const makerTokens = parseFloat((maker.volumeLeft / makerPrice).toFixed(6));
+      const takerTokens = parseFloat((remainingTaker   / takerCost).toFixed(6));
+      const tradeTokens = Math.min(makerTokens, takerTokens);
+      if (tradeTokens < 0.001) continue;
+
+      // Euro spesi da ciascuno per questa fetta
+      const makerSpends = parseFloat((tradeTokens * makerPrice).toFixed(2));
+      const takerSpends = parseFloat((tradeTokens * takerCost).toFixed(2));
+
+      const yesOrder = newOrder.side === 'yes' ? newOrder : maker;
+      const noOrder  = newOrder.side === 'no'  ? newOrder : maker;
+      const yesSpends = newOrder.side === 'yes' ? takerSpends : makerSpends;
+      const noSpends  = newOrder.side === 'no'  ? takerSpends : makerSpends;
+
+      const tradeRef = db.ref('trades').push();
+      updates['trades/' + tradeRef.key] = {
+        id:         tradeRef.key,
+        userYes:    yesOrder.user,
+        userNo:     noOrder.user,
+        priceYes:   yesOrder.price,   // prezzo limite del compratore Sì
+        priceNo:    noOrder.price,    // prezzo limite del compratore No
+        tradePrice: makerPrice,       // prezzo effettivo del trade (= prezzo maker Sì)
+        spentYes:   yesSpends,        // euro spesi dal compratore Sì
+        spentNo:    noSpends,         // euro spesi dal compratore No
+        tokens:     parseFloat(tradeTokens.toFixed(4)),  // token scambiati (= pot in €)
+        amount:     parseFloat((makerSpends + takerSpends).toFixed(2)),
+        ts:         Date.now()
+      };
+
+      // Aggiorna volumeLeft maker
+      const makerLeft = parseFloat((maker.volumeLeft - makerSpends).toFixed(2));
+      updates['orders/' + maker.id + '/volumeLeft'] = Math.max(0, makerLeft);
+      updates['orders/' + maker.id + '/status']     = makerLeft <= 0.01 ? 'filled' : 'partial';
+
+      remainingTaker = parseFloat((remainingTaker - takerSpends).toFixed(2));
+
+      toasts.push(
+        yesOrder.user + ' (Sì @' + fmt(makerPrice) + ') ↔ ' +
+        noOrder.user  + ' (No @' + fmt(takerCost)  + ') · ' +
+        parseFloat(tradeTokens.toFixed(2)) + ' token'
+      );
+    }
+
+    // Aggiorna volumeLeft taker
+    const takerLeft = Math.max(0, remainingTaker);
+    updates['orders/' + newOrder.id + '/volumeLeft'] = takerLeft;
+    updates['orders/' + newOrder.id + '/status']     =
+      takerLeft <= 0.01 ? 'filled' :
+      takerLeft < newOrder.volumeLeft ? 'partial' : 'open';
+
+    db.ref().update(updates).then(() => {
+      if (toasts.length) showToast('✓ Trade eseguito!', toasts[toasts.length - 1]);
+    });
+  });
+}
+
+// Compatibilità: price_maker_sì + price_taker_no >= 1  (e viceversa)
+// In pratica: il taker è disposto a pagare abbastanza da coprire il complemento del maker.
+function isCompatible(taker, maker) {
+  const priceSì = taker.side === 'yes' ? taker.price : maker.price;
+  const priceNo = taker.side === 'no'  ? taker.price : maker.price;
+  return (priceSì + priceNo) >= 1.0 - 0.0001;
+}
+
+// ═══════════════════════════════════════════════
+//  CANCELLA ORDINE
+// ═══════════════════════════════════════════════
+function cancelOrder(orderId) {
+  db.ref('orders/' + orderId).once('value').then(snap => {
+    const o = snap.val();
+    if (!o || o.user !== userName) return;
+    // Rimborsa il volumeLeft al saldo
+    myBalance = parseFloat((myBalance + o.volumeLeft).toFixed(2));
+    document.getElementById('balance-display').textContent = fmt(myBalance);
+    db.ref('orders/' + orderId + '/status').set('cancelled');
+    showToast('Ordine cancellato', 'Rimborso di ' + fmt(o.volumeLeft) + ' al tuo saldo');
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER ORDER BOOK
+// ═══════════════════════════════════════════════
+function renderBook(orders) {
+  const active = o => o.status === 'open' || o.status === 'partial';
+
+  const yesOrders = Object.values(orders)
+    .filter(o => o.side === 'yes' && active(o))
+    .sort((a, b) => b.price - a.price);  // migliore prezzo (più alto) in cima
+
+  const noOrders = Object.values(orders)
+    .filter(o => o.side === 'no' && active(o))
+    .sort((a, b) => b.price - a.price);
+
+  document.getElementById('book-yes').innerHTML = yesOrders.length
+    ? yesOrders.map(o => `
+        <div class="book-row yes">
+          <span class="br-user">${esc(o.user)}</span>
+          <span class="br-price">${fmt(o.price)}</span>
+          <span class="br-vol">${fmt(o.volumeLeft)}</span>
+        </div>`).join('')
+    : '<div class="empty-book">Nessun ordine</div>';
+
+  document.getElementById('book-no').innerHTML = noOrders.length
+    ? noOrders.map(o => `
+        <div class="book-row no">
+          <span class="br-user">${esc(o.user)}</span>
+          <span class="br-price">${fmt(o.price)}</span>
+          <span class="br-vol">${fmt(o.volumeLeft)}</span>
+        </div>`).join('')
+    : '<div class="empty-book">Nessun ordine</div>';
+}
+
+// ═══════════════════════════════════════════════
+//  MARKET STATS (miglior prezzo bid/ask)
+// ═══════════════════════════════════════════════
+function updateMarketStats(orders) {
+  const active = o => o.status === 'open' || o.status === 'partial';
+
+  const yesOrders = Object.values(orders).filter(o => o.side === 'yes' && active(o));
+  const noOrders  = Object.values(orders).filter(o => o.side === 'no'  && active(o));
+
+  const bestYes = yesOrders.length ? Math.max(...yesOrders.map(o => o.price)) : null;
+  const bestNo  = noOrders.length  ? Math.max(...noOrders.map(o => o.price))  : null;
+
+  document.getElementById('stat-best-yes').textContent = bestYes !== null ? fmt(bestYes) : '—';
+  document.getElementById('stat-best-no').textContent  = bestNo  !== null ? fmt(bestNo)  : '—';
+
+  // La quota implicita è il miglior prezzo Sì disponibile
+  if (bestYes !== null) {
+    setProbDisplay(bestYes);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  QUOTA DA TRADE (fallback se non ci sono ordini aperti)
+// ═══════════════════════════════════════════════
+function updateQuoteFromTrades(trades) {
+  if (!trades.length) return;
+  // Usa il tradePrice dell'ultimo trade come quota corrente
+  const last = trades[0];
+  setProbDisplay(last.tradePrice);
+}
+
+function setProbDisplay(p) {
+  document.getElementById('pct-yes').textContent = (p * 100).toFixed(1).replace('.', ',') + '%';
+  document.getElementById('pct-no').textContent  = ((1 - p) * 100).toFixed(1).replace('.', ',') + '%';
+  document.getElementById('bar-fill').style.width = (p * 100).toFixed(1) + '%';
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER MIEI ORDINI
+// ═══════════════════════════════════════════════
+function renderMyOrders(orders) {
+  if (!userName) return;
+  const mine = Object.values(orders).filter(o =>
+    o.user === userName && (o.status === 'open' || o.status === 'partial')
+  );
+  const box = document.getElementById('my-orders-box');
+  if (!mine.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  document.getElementById('my-orders-list').innerHTML = mine.map(o => `
+    <div class="my-order-row">
+      <span style="color:var(--${o.side})">${o.side === 'yes' ? 'Sì' : 'No'}</span>
+      <span>${fmt(o.price)}/€1 · rimasto ${fmt(o.volumeLeft)}</span>
+      <button class="cancel-btn" onclick="cancelOrder('${esc(o.id)}')">annulla</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER TRADE HISTORY
+// ═══════════════════════════════════════════════
+function renderTrades(trades) {
+  const el = document.getElementById('trade-history');
+  if (!trades.length) {
+    el.innerHTML = '<div style="color:var(--ink3);font-size:12px;font-style:italic">Nessun trade ancora eseguito.</div>';
+    return;
+  }
+  el.innerHTML = trades.slice(0, 30).map(t => `
+    <div class="trade-row">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span class="tbadge yes">Sì: ${esc(t.userYes)}</span>
+          <span style="font-size:10px;color:var(--ink3)">↔</span>
+          <span class="tbadge no">No: ${esc(t.userNo)}</span>
+        </div>
+        <div class="tmeta">prezzo ${fmt(t.tradePrice)} · ${timeAgo(t.ts)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:500">${fmt(t.amount)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function fmt(v) { return '€\u00a0' + (Math.round(v * 100) / 100).toFixed(2).replace('.', ','); }
+function esc(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function setEl(id, val, cls = '') { const el = document.getElementById(id); el.textContent = val; el.className = 'sum-val ' + cls; }
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'adesso';
+  if (s < 3600) return Math.floor(s / 60) + 'min fa';
+  return Math.floor(s / 3600) + 'h fa';
+}
+function showToast(title, sub) {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-sub').textContent = sub || '';
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4500);
+}
+</script>
+</body>
+</html>
