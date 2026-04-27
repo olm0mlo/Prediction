@@ -159,8 +159,7 @@ input[type=number]:focus{border-color:var(--accent)}
 
   <!-- DOMANDA + PROB -->
   <div class="question-card">
-    <div class="q-label">⚽ Serie A · 2025/26</div>
-    <div class="q-text">L'Inter vincerà lo Scudetto nella stagione 2025/26?</div>
+    <div class="q-text" id="q-text">In attesa della domanda...</div>
     <div class="prob-row">
       <div class="prob-pct yes" id="pct-yes">—</div>
       <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:50%"></div></div>
@@ -257,6 +256,16 @@ let userName    = '';
 let myBalance   = 100;
 let mySide      = 'yes';
 let currentOrders = {};
+
+function saveBalance() {
+  if (!userName) return;
+  db.ref('users/' + encodeURIComponent(userName) + '/balance').set(myBalance);
+}
+
+function updateBalanceDisplay(val) {
+  myBalance = parseFloat(val.toFixed(2));
+  document.getElementById('balance-display').textContent = fmt(myBalance);
+}
 
 // ── ENTER ──
 function enterMarket() {
@@ -398,8 +407,8 @@ function placeOrder() {
     ts: Date.now(), status: 'open'
   };
 
-  myBalance = parseFloat((myBalance-volume).toFixed(2));
-  document.getElementById('balance-display').textContent = fmt(myBalance);
+  updateBalanceDisplay(myBalance - volume);
+  saveBalance();
   document.getElementById('price-input').value  = '';
   document.getElementById('volume-input').value = '';
   document.getElementById('btn-order').disabled = true;
@@ -524,8 +533,8 @@ function cancelOrder(id) {
   db.ref('orders/'+id).once('value').then(snap => {
     const o = snap.val();
     if (!o||o.user!==userName) return;
-    myBalance = parseFloat((myBalance+o.volumeLeft).toFixed(2));
-    document.getElementById('balance-display').textContent = fmt(myBalance);
+    updateBalanceDisplay(myBalance + o.volumeLeft);
+    saveBalance();
     db.ref('orders/'+id+'/status').set('cancelled');
     showToast('Ordine annullato', 'Rimborso '+fmt(o.volumeLeft));
   });
