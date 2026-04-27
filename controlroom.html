@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PredictIT — Control Room</title>
+<title>Sfinge — Control Room</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -151,7 +151,7 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 <header class="masthead">
   <div class="masthead-inner">
     <div style="display:flex;align-items:center;gap:14px">
-      <div class="masthead-logo">PredictIT</div>
+      <div class="masthead-logo">Sfinge</div>
       <div class="masthead-badge">Control Room</div>
     </div>
     <div style="display:flex;align-items:center;gap:16px">
@@ -517,19 +517,31 @@ function confirmReset() {
 
 function executeReset() {
   closeModal();
+
+  // Azzera UI immediatamente senza aspettare i listener Firebase
+  allOrders = {};
+  allTrades = [];
+  renderBook({});
+  renderTrades([]);
+  renderLeaderboard();
+  updateProb([]);
+  updateStats({});
+  document.getElementById('stat-trades').textContent = '0';
+  document.getElementById('stat-vol').textContent    = '€ 0';
+  document.getElementById('res-done').classList.remove('show');
+  document.getElementById('res-done').textContent    = '';
+  document.getElementById('res-btn-yes').disabled    = false;
+  document.getElementById('res-btn-no').disabled     = false;
+  document.getElementById('resolution-status').textContent = '';
+
   db.ref().update({
     orders:     null,
     trades:     null,
     users:      null,
     resolution: null,
     presence:   null,
-    sessionId:  Date.now()   // forza reinserimento nome su tutti gli smartphone
+    sessionId:  Date.now()
   }).then(() => {
-    document.getElementById('res-done').classList.remove('show');
-    document.getElementById('res-done').textContent = '';
-    document.getElementById('res-btn-yes').disabled = false;
-    document.getElementById('res-btn-no').disabled  = false;
-    document.getElementById('resolution-status').textContent = '';
     showToast('Database azzerato', 'Tutti gli utenti dovranno reinserire il nome');
   });
 }
