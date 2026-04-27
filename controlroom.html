@@ -39,7 +39,6 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 .section-body{padding:14px}
 
 /* EVENT */
-.event-cat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-weight:500}
 .event-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1.3;color:var(--ink);margin-bottom:10px}
 
 /* PROB */
@@ -103,8 +102,16 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 .res-btn.no:hover{background:var(--no);color:#fff}
 .res-btn:disabled{opacity:0.35;cursor:not-allowed}
 .res-note{font-size:11px;color:var(--ink3);line-height:1.7}
-.res-done{display:none;background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px}
+.res-done{display:none;background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px;margin-top:12px}
 .res-done.show{display:block}
+
+/* RESET */
+.reset-card{background:var(--paper);border:2px solid var(--no);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.reset-head{background:var(--no);color:#fff;padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.reset-body{padding:14px}
+.reset-note{font-size:11px;color:var(--ink3);line-height:1.7;margin-bottom:12px}
+.btn-reset{width:100%;padding:12px;border-radius:var(--radius);border:2px solid var(--no);background:none;color:var(--no);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;transition:all 0.15s}
+.btn-reset:hover{background:var(--no);color:#fff}
 
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:10px 15px;max-width:300px;font-size:12px;line-height:1.6;opacity:0;transform:translateY(10px);transition:all 0.3s cubic-bezier(.4,0,.2,1);z-index:400;pointer-events:none}
@@ -131,7 +138,7 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 <!-- CONFIRM MODAL -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
-    <div class="modal-title" id="modal-title">Conferma risoluzione</div>
+    <div class="modal-title" id="modal-title"></div>
     <div class="modal-sub" id="modal-sub"></div>
     <div class="modal-btns">
       <button class="modal-btn cancel" onclick="closeModal()">Annulla</button>
@@ -172,14 +179,14 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
           <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:6px">Domanda del mercato</label>
           <input class="q-editor" id="q-input" type="text" placeholder="Scrivi la domanda e premi Invio..."
             onkeydown="if(event.key==='Enter')saveQuestion()">
-          <div class="q-editor-hint">Premi Invio per aggiornare la domanda su tutti gli smartphone</div>
+          <div class="q-editor-hint">Premi Invio per aggiornare la domanda su tutti gli smartphone (aggiorna anche la sessione)</div>
         </div>
         <div class="prob-row">
           <div class="prob-pct yes" id="pct-yes">—</div>
           <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:50%"></div></div>
           <div class="prob-pct no" id="pct-no">—</div>
         </div>
-        <div class="prob-labels"><span>◆ Sì — Inter vince</span><span>No ◆</span></div>
+        <div class="prob-labels"><span>◆ Sì</span><span>No ◆</span></div>
         <div class="stats-row">
           <div class="stat"><div class="stat-lbl">Prob. Sì</div><div class="stat-val" id="stat-prob">—</div></div>
           <div class="stat"><div class="stat-lbl">Volume totale</div><div class="stat-val" id="stat-vol">€ 0</div></div>
@@ -230,10 +237,10 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
         <div class="res-question">Chi ha vinto?</div>
         <div class="res-buttons">
           <div class="res-btn yes" id="res-btn-yes" onclick="confirmResolve('yes')">
-            ◆ Sì<br><span style="font-size:11px;opacity:0.75">Inter vince</span>
+            ◆ Sì<br><span style="font-size:11px;opacity:0.75">esito Sì vince</span>
           </div>
           <div class="res-btn no" id="res-btn-no" onclick="confirmResolve('no')">
-            ◆ No<br><span style="font-size:11px;opacity:0.75">Inter non vince</span>
+            ◆ No<br><span style="font-size:11px;opacity:0.75">esito No vince</span>
           </div>
         </div>
         <div class="res-note">
@@ -248,6 +255,15 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
       <div class="section-head"><span>Classifica partecipanti</span><span id="lb-count"></span></div>
       <div class="section-body">
         <div id="leaderboard"><div style="color:var(--ink3);font-size:12px;font-style:italic">Nessun partecipante.</div></div>
+      </div>
+    </div>
+
+    <!-- RESET -->
+    <div class="reset-card">
+      <div class="reset-head">⚠ Azzera database</div>
+      <div class="reset-body">
+        <div class="reset-note">Cancella tutti gli ordini, trade, saldi e la risoluzione. Gli utenti con la pagina aperta vengono forzati a reinserire il nome. La domanda viene mantenuta.</div>
+        <button class="btn-reset" onclick="confirmReset()">Azzera tutto</button>
       </div>
     </div>
 
@@ -275,10 +291,16 @@ let allOrders = {};
 let allTrades = [];
 let pendingWinner = null;
 
+// ── DOMANDA ──
+// Aggiorna sessionId ogni volta che cambia la domanda,
+// così tutti gli smartphone vengono forzati a reinserire il nome.
 function saveQuestion() {
   const text = document.getElementById('q-input').value.trim();
   if (!text) return;
-  db.ref('question').set({ text, ts: Date.now() });
+  db.ref().update({
+    'question': { text, ts: Date.now() },
+    'sessionId': Date.now()
+  });
   showToast('Domanda aggiornata', text.substring(0,60)+(text.length>60?'...':''));
 }
 
@@ -318,7 +340,6 @@ db.ref('question').on('value', snap => {
   const crQ = document.getElementById('cr-question');
   if (crQ) crQ.textContent = text || 'In attesa della domanda...';
   const inp = document.getElementById('q-input');
-  // Aggiorna il campo solo se non è in focus (per non disturbare la digitazione)
   if (inp && document.activeElement !== inp) inp.value = text;
 });
 
@@ -352,7 +373,7 @@ function renderBook(orders) {
   const active = o => o.status==='open'||o.status==='partial';
   const yes = Object.values(orders).filter(o=>o.side==='yes'&&active(o)).sort((a,b)=>b.price-a.price);
   const no  = Object.values(orders).filter(o=>o.side==='no' &&active(o)).sort((a,b)=>b.price-a.price);
-  const statusLabel = s => s==='partial'?'parz.':s==='open'?'aperto':'—';
+  const statusLabel = s => s==='partial'?'parz.':'aperto';
 
   document.getElementById('book-yes').innerHTML = yes.length
     ? yes.map(o=>`<div class="book-row yes">
@@ -392,20 +413,12 @@ function renderTrades(trades) {
 }
 
 // ── LEADERBOARD ──
-// Costruisce la classifica calcolando per ogni utente:
-// saldo = 100 (budget iniziale) - spesa in ordini matchati + rimborso ordini aperti
-// (i guadagni dalla risoluzione vengono aggiunti solo dopo la risoluzione)
 function renderLeaderboard() {
-  // Raccoglie tutti gli utenti
   const users = {};
   Object.values(allOrders).forEach(o => {
-    if (!users[o.user]) users[o.user] = {spent:0, openLeft:0, tokensYes:0, tokensNo:0};
-    if (o.status==='filled'||o.status==='partial') {
-      users[o.user].spent += (o.volumeTotal - o.volumeLeft);
-    }
-    if (o.status==='open'||o.status==='partial') {
-      users[o.user].openLeft += o.volumeLeft;
-    }
+    if (!users[o.user]) users[o.user] = {spent:0,openLeft:0,tokensYes:0,tokensNo:0};
+    if (o.status==='filled'||o.status==='partial') users[o.user].spent += (o.volumeTotal-o.volumeLeft);
+    if (o.status==='open'||o.status==='partial')   users[o.user].openLeft += o.volumeLeft;
   });
   allTrades.forEach(t => {
     if (!users[t.userYes]) users[t.userYes]={spent:0,openLeft:0,tokensYes:0,tokensNo:0};
@@ -414,10 +427,9 @@ function renderLeaderboard() {
     users[t.userNo].tokensNo   += t.tokens;
   });
 
-  const rows = Object.entries(users).map(([name, u]) => {
-    // Saldo corrente = 100 - speso nei trade + rimasto negli ordini aperti
-    const balance = parseFloat((100 - u.spent + u.openLeft).toFixed(2));
-    return { name, balance, tokensYes: u.tokensYes, tokensNo: u.tokensNo };
+  const rows = Object.entries(users).map(([name,u]) => {
+    const balance = parseFloat((100-u.spent+u.openLeft).toFixed(2));
+    return {name, balance, tokensYes:u.tokensYes, tokensNo:u.tokensNo};
   }).sort((a,b)=>b.balance-a.balance);
 
   const el = document.getElementById('leaderboard');
@@ -430,7 +442,7 @@ function renderLeaderboard() {
       <div class="lb-user">${esc(r.name)}</div>
       <div class="lb-bal" style="color:var(--accent)">${fmt(r.balance)}</div>
       <div class="lb-pos ${r.tokensYes>0?'yes':r.tokensNo>0?'no':'none'}">
-        ${r.tokensYes>0 ? '▲ Sì '+r.tokensYes.toFixed(1)+'T' : r.tokensNo>0 ? '▼ No '+r.tokensNo.toFixed(1)+'T' : '—'}
+        ${r.tokensYes>0?'▲ Sì '+r.tokensYes.toFixed(1)+'T':r.tokensNo>0?'▼ No '+r.tokensNo.toFixed(1)+'T':'—'}
       </div>
     </div>`).join('');
 }
@@ -438,16 +450,11 @@ function renderLeaderboard() {
 // ── RISOLUZIONE ──
 function confirmResolve(winner) {
   pendingWinner = winner;
-  const label = winner==='yes' ? '✓ Sì (Inter vince)' : '✗ No (Inter non vince)';
+  const label = winner==='yes' ? '✓ Sì' : '✗ No';
   document.getElementById('modal-title').textContent = 'Conferma risoluzione';
   document.getElementById('modal-sub').textContent   = 'Stai per dichiarare vincitore: '+label+'. Questa azione aggiornerà il saldo di tutti gli utenti e non può essere annullata.';
   document.getElementById('modal-confirm').onclick   = executeResolve;
   document.getElementById('modal-bg').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modal-bg').classList.remove('show');
-  pendingWinner = null;
 }
 
 function executeResolve() {
@@ -455,7 +462,6 @@ function executeResolve() {
   const winner = pendingWinner;
   closeModal();
 
-  // Calcola e scrivi i saldi finali per ogni utente su Firebase
   Promise.all([
     db.ref('orders').once('value'),
     db.ref('trades').once('value')
@@ -463,33 +469,28 @@ function executeResolve() {
     const orders = ordSnap.val() ? Object.values(ordSnap.val()) : [];
     const trades = trdSnap.val() ? Object.values(trdSnap.val()) : [];
 
-    // Raccoglie tutti gli utenti e calcola il saldo finale
     const users = {};
     orders.forEach(o => {
-      if (!users[o.user]) users[o.user] = { spent: 0, openLeft: 0, tokensYes: 0, tokensNo: 0 };
-      if (o.status === 'filled' || o.status === 'partial')
-        users[o.user].spent += (o.volumeTotal - o.volumeLeft);
-      if (o.status === 'open' || o.status === 'partial')
-        users[o.user].openLeft += o.volumeLeft;
+      if (!users[o.user]) users[o.user]={spent:0,openLeft:0,tokensYes:0,tokensNo:0};
+      if (o.status==='filled'||o.status==='partial') users[o.user].spent += (o.volumeTotal-o.volumeLeft);
+      if (o.status==='open'||o.status==='partial')   users[o.user].openLeft += o.volumeLeft;
     });
     trades.forEach(t => {
-      if (!users[t.userYes]) users[t.userYes] = { spent: 0, openLeft: 0, tokensYes: 0, tokensNo: 0 };
-      if (!users[t.userNo])  users[t.userNo]  = { spent: 0, openLeft: 0, tokensYes: 0, tokensNo: 0 };
+      if (!users[t.userYes]) users[t.userYes]={spent:0,openLeft:0,tokensYes:0,tokensNo:0};
+      if (!users[t.userNo])  users[t.userNo] ={spent:0,openLeft:0,tokensYes:0,tokensNo:0};
       users[t.userYes].tokensYes += t.tokens;
       users[t.userNo].tokensNo   += t.tokens;
     });
 
     const updates = {};
-    Object.entries(users).forEach(([nick, u]) => {
-      const winTokens = winner === 'yes' ? u.tokensYes : u.tokensNo;
-      // saldo = 100 - speso nei trade + rimborso ordini aperti + token vincenti
-      const finalBalance = parseFloat((100 - u.spent + u.openLeft + winTokens).toFixed(2));
-      updates['users/' + encodeURIComponent(nick) + '/balance'] = finalBalance;
-      // Chiudi ordini aperti
-      orders.filter(o => o.user === nick && (o.status === 'open' || o.status === 'partial'))
-        .forEach(o => { updates['orders/' + o.id + '/status'] = 'cancelled'; });
+    Object.entries(users).forEach(([nick,u]) => {
+      const winTokens = winner==='yes' ? u.tokensYes : u.tokensNo;
+      const finalBalance = parseFloat((100-u.spent+u.openLeft+winTokens).toFixed(2));
+      updates['users/'+encodeURIComponent(nick)+'/balance'] = finalBalance;
+      orders.filter(o=>o.user===nick&&(o.status==='open'||o.status==='partial'))
+        .forEach(o => { updates['orders/'+o.id+'/status']='cancelled'; });
     });
-    updates['resolution'] = { winner, ts: Date.now() };
+    updates['resolution'] = {winner, ts:Date.now()};
     db.ref().update(updates);
     showToast('Evento risolto!', 'Vincitore: '+(winner==='yes'?'Sì':'No')+' · Saldi aggiornati');
   });
@@ -503,6 +504,39 @@ function showResolutionDone(winner) {
   done.classList.add('show');
   document.getElementById('res-btn-yes').disabled = true;
   document.getElementById('res-btn-no').disabled  = true;
+}
+
+// ── RESET ──
+// Aggiorna sessionId così tutti gli smartphone vengono forzati a reinserire il nome.
+function confirmReset() {
+  document.getElementById('modal-title').textContent = 'Azzera database';
+  document.getElementById('modal-sub').textContent   = 'Tutti gli ordini, i trade e i saldi verranno cancellati. Gli utenti con la pagina aperta dovranno reinserire il nome. La domanda rimane invariata.';
+  document.getElementById('modal-confirm').onclick   = executeReset;
+  document.getElementById('modal-bg').classList.add('show');
+}
+
+function executeReset() {
+  closeModal();
+  db.ref().update({
+    orders:     null,
+    trades:     null,
+    users:      null,
+    resolution: null,
+    presence:   null,
+    sessionId:  Date.now()   // forza reinserimento nome su tutti gli smartphone
+  }).then(() => {
+    document.getElementById('res-done').classList.remove('show');
+    document.getElementById('res-done').textContent = '';
+    document.getElementById('res-btn-yes').disabled = false;
+    document.getElementById('res-btn-no').disabled  = false;
+    document.getElementById('resolution-status').textContent = '';
+    showToast('Database azzerato', 'Tutti gli utenti dovranno reinserire il nome');
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('show');
+  pendingWinner = null;
 }
 
 // ── UTILS ──

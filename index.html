@@ -18,7 +18,7 @@
 body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:14px;min-height:100vh;padding-bottom:40px}
 
 /* OVERLAY NICKNAME */
-.overlay{position:fixed;inset:0;background:rgba(26,23,20,0.88);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.overlay{position:fixed;inset:0;background:rgba(26,23,20,0.88);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px}
 .overlay-card{background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius);padding:28px 22px;width:100%;max-width:340px;text-align:center}
 .overlay-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--ink);margin-bottom:4px}
 .overlay-sub{color:var(--ink3);font-size:12px;margin-bottom:20px;line-height:1.7}
@@ -49,7 +49,6 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 
 /* QUESTION */
 .question-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:18px;margin-bottom:16px}
-.q-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:500}
 .q-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;line-height:1.35;color:var(--ink);margin-bottom:14px}
 .prob-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
 .prob-pct{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;min-width:46px}
@@ -71,17 +70,14 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 /* ORDER FORM */
 .order-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:16px;margin-bottom:16px}
 .card-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;font-weight:500}
-
 .best-banner{display:none;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--radius);border:1px solid;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .best-banner.yes{background:var(--yes-bg);border-color:var(--yes-border)}
 .best-banner.no{background:var(--no-bg);border-color:var(--no-border)}
-.bb-left{}
 .bb-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
 .bb-label.yes{color:var(--yes)}.bb-label.no{color:var(--no)}
 .bb-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
 .bb-price.yes{color:var(--yes)}.bb-price.no{color:var(--no)}
 .bb-cta{font-size:11px;color:var(--ink3)}
-
 .field{margin-bottom:12px}
 .field-label{font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;display:block}
 .input-wrap{position:relative}
@@ -90,14 +86,12 @@ body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace
 input[type=number]{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:18px;padding:12px 40px 12px 28px;outline:none;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button{display:none}
 input[type=number]:focus{border-color:var(--accent)}
-
 .summary{background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:12px}
 .sum-row{display:flex;justify-content:space-between;padding:3px 0}
 .sum-row:not(:last-child){border-bottom:1px dashed var(--rule)}
 .sum-key{color:var(--ink3)}
 .sum-val{font-weight:500}
 .sum-val.yes{color:var(--yes)}.sum-val.no{color:var(--no)}
-
 .btn-order{width:100%;padding:15px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;transition:all 0.15s}
 .btn-order.yes{background:var(--yes);color:#fff}
 .btn-order.no{background:var(--no);color:#fff}
@@ -128,7 +122,7 @@ input[type=number]:focus{border-color:var(--accent)}
 <div class="overlay" id="nick-overlay">
   <div class="overlay-card">
     <div class="overlay-logo">PredictIT</div>
-    <div class="overlay-sub">Mercato di predizione in tempo reale.<br>Scegli un nickname.</div>
+    <div class="overlay-sub" id="nick-sub">Mercato di predizione in tempo reale.<br>Scegli un nickname.</div>
     <div class="overlay-field">
       <input type="text" id="nick-input" maxlength="20" placeholder="Il tuo nome..."
         autofocus onkeydown="if(event.key==='Enter')enterMarket()">
@@ -157,7 +151,6 @@ input[type=number]:focus{border-color:var(--accent)}
 
 <div class="main">
 
-  <!-- DOMANDA + PROB -->
   <div class="question-card">
     <div class="q-text" id="q-text">In attesa della domanda...</div>
     <div class="prob-row">
@@ -168,7 +161,6 @@ input[type=number]:focus{border-color:var(--accent)}
     <div class="prob-labels"><span>◆ Sì</span><span>No ◆</span></div>
   </div>
 
-  <!-- SCELTA ESITO -->
   <div class="side-selector">
     <div class="side-btn yes active" id="side-yes" onclick="selectSide('yes')">
       <div>◆ Sì</div>
@@ -182,11 +174,8 @@ input[type=number]:focus{border-color:var(--accent)}
     </div>
   </div>
 
-  <!-- FORM ORDINE -->
   <div class="order-card">
     <div class="card-title" id="form-title">Inserisci ordine — Sì</div>
-
-    <!-- BEST PRICE BANNER -->
     <div class="best-banner yes" id="best-banner" onclick="useBestPrice()">
       <div class="bb-left">
         <div class="bb-label yes" id="bb-label">Miglior prezzo disponibile</div>
@@ -194,41 +183,32 @@ input[type=number]:focus{border-color:var(--accent)}
       </div>
       <div class="bb-cta">Tocca per<br>usarlo →</div>
     </div>
-
     <div class="field">
       <label class="field-label">Prezzo limite (€ per vincere €1)</label>
       <div class="input-wrap">
         <span class="input-prefix">€</span>
-        <input type="number" id="price-input" min="0.01" max="0.99" step="0.01"
-          placeholder="0.60" oninput="updatePreview()">
+        <input type="number" id="price-input" min="0.01" max="0.99" step="0.01" placeholder="0.60" oninput="updatePreview()">
         <span class="input-suffix">/ €1</span>
       </div>
     </div>
-
     <div class="field">
       <label class="field-label">Volume massimo (€ da spendere)</label>
       <div class="input-wrap">
         <span class="input-prefix">€</span>
-        <input type="number" id="volume-input" min="0.10" step="0.10"
-          placeholder="10.00" oninput="updatePreview()">
+        <input type="number" id="volume-input" min="0.10" step="0.10" placeholder="10.00" oninput="updatePreview()">
         <span class="input-suffix">max</span>
       </div>
     </div>
-
-    <div class="summary" id="summary">
+    <div class="summary">
       <div class="sum-row"><span class="sum-key">Prezzo limite</span><span class="sum-val" id="s-price">—</span></div>
       <div class="sum-row"><span class="sum-key">Spesa massima</span><span class="sum-val" id="s-vol">—</span></div>
       <div class="sum-row"><span class="sum-key">Guadagno max</span><span class="sum-val" id="s-win">—</span></div>
       <div class="sum-row"><span class="sum-key">Ritorno totale</span><span class="sum-val" id="s-total">—</span></div>
     </div>
-
     <div class="err" id="err-msg"></div>
-    <button class="btn-order yes" id="btn-order" onclick="placeOrder()" disabled>
-      Conferma ordine Sì
-    </button>
+    <button class="btn-order yes" id="btn-order" onclick="placeOrder()" disabled>Conferma ordine Sì</button>
   </div>
 
-  <!-- MIEI ORDINI -->
   <div class="my-orders-card" id="my-orders-card" style="display:none">
     <div class="card-title">I tuoi ordini</div>
     <div id="my-orders-list"></div>
@@ -252,19 +232,32 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-let userName    = '';
-let myBalance   = 100;
-let mySide      = 'yes';
+let userName      = '';
+let myBalance     = 100;
+let mySide        = 'yes';
 let currentOrders = {};
+let mySessionId   = null;   // sessionId al momento dell'ingresso
 
 function saveBalance() {
   if (!userName) return;
   db.ref('users/' + encodeURIComponent(userName) + '/balance').set(myBalance);
 }
-
 function updateBalanceDisplay(val) {
-  myBalance = parseFloat(val.toFixed(2));
+  myBalance = parseFloat((+val).toFixed(2));
   document.getElementById('balance-display').textContent = fmt(myBalance);
+}
+
+// ── SESSIONE SCADUTA ──
+function showExpired(msg) {
+  // Rimostra overlay nickname con messaggio aggiornato
+  userName = '';
+  document.getElementById('nick-input').value = '';
+  document.getElementById('nick-sub').textContent = msg || 'Sessione scaduta. Inserisci di nuovo il tuo nome.';
+  document.getElementById('nick-overlay').style.display = 'flex';
+  // Blocca form
+  document.getElementById('btn-order').disabled = true;
+  // Nascondi overlay risoluzione se aperto
+  document.getElementById('resolved-overlay').className = 'resolved-overlay';
 }
 
 // ── ENTER ──
@@ -273,23 +266,57 @@ function enterMarket() {
   if (!nick) return;
   userName = nick;
   document.getElementById('nick-overlay').style.display = 'none';
+  document.getElementById('nick-sub').textContent = 'Mercato di predizione in tempo reale.\nScegli un nickname.';
 
   const presRef = db.ref('presence/' + encodeURIComponent(userName) + '_' + Date.now());
   presRef.set(true);
   presRef.onDisconnect().remove();
 
+  // Carica o inizializza saldo da Firebase
+  const balRef = db.ref('users/' + encodeURIComponent(userName) + '/balance');
+  balRef.once('value').then(snap => {
+    const saved = snap.val();
+    updateBalanceDisplay(saved !== null ? saved : 100);
+    if (saved === null) saveBalance();
+  });
+  balRef.on('value', snap => {
+    if (snap.val() !== null) updateBalanceDisplay(snap.val());
+  });
+
+  // Salva sessionId corrente al momento dell'ingresso
+  db.ref('sessionId').once('value').then(snap => { mySessionId = snap.val(); });
+
+  // Ascolta cambiamenti sessionId
+  db.ref('sessionId').on('value', snap => {
+    const newId = snap.val();
+    if (mySessionId === null) { mySessionId = newId; return; }
+    if (newId !== mySessionId) {
+      mySessionId = newId;
+      showExpired('La domanda è cambiata o il mercato è stato azzerato.\nInserisci di nuovo il tuo nome per continuare.');
+    }
+  });
+
+  // Ascolta domanda
+  db.ref('question').on('value', snap => {
+    const q = snap.val();
+    const el = document.getElementById('q-text');
+    if (el) el.textContent = q && q.text ? q.text : 'In attesa della domanda...';
+  });
+
+  // Ascolta ordini
   db.ref('orders').on('value', snap => {
     currentOrders = snap.val() || {};
     updateBestPrices();
     renderMyOrders();
   });
 
+  // Ascolta trade
   db.ref('trades').on('value', snap => {
     const trades = snap.val() ? Object.values(snap.val()).sort((a,b) => b.ts-a.ts) : [];
     updateProb(trades);
   });
 
-  // Ascolta risoluzione evento
+  // Ascolta risoluzione
   db.ref('resolution').on('value', snap => {
     const res = snap.val();
     if (res && res.winner) showResolution(res);
@@ -311,19 +338,14 @@ function setProbDisplay(p) {
 
 // ── BEST PRICES ──
 function updateBestPrices() {
-  // Miglior prezzo per comprare Sì = maker No con prezzo più basso → taker Sì paga 1-makerNo
   const noMakers  = Object.values(currentOrders).filter(o => (o.status==='open'||o.status==='partial') && o.side==='no'  && o.user!==userName);
   const yesMakers = Object.values(currentOrders).filter(o => (o.status==='open'||o.status==='partial') && o.side==='yes' && o.user!==userName);
-
   const bestForYes = noMakers.length  ? Math.min(...noMakers.map(o=>o.price))  : null;
   const bestForNo  = yesMakers.length ? Math.min(...yesMakers.map(o=>o.price)) : null;
-
   const takerYes = bestForYes !== null ? parseFloat((1-bestForYes).toFixed(4)) : null;
   const takerNo  = bestForNo  !== null ? parseFloat((1-bestForNo).toFixed(4))  : null;
-
   document.getElementById('side-price-yes').textContent = takerYes !== null ? '€'+takerYes.toFixed(2).replace('.',',') : '—';
   document.getElementById('side-price-no').textContent  = takerNo  !== null ? '€'+takerNo.toFixed(2).replace('.',',')  : '—';
-
   updateBestBanner();
 }
 
@@ -384,7 +406,10 @@ function updatePreview() {
   btn.disabled = false;
 }
 function clearSummary() {
-  ['s-price','s-vol','s-win','s-total'].forEach(id => { document.getElementById(id).textContent='—'; document.getElementById(id).className='sum-val'; });
+  ['s-price','s-vol','s-win','s-total'].forEach(id => {
+    document.getElementById(id).textContent='—';
+    document.getElementById(id).className='sum-val';
+  });
 }
 
 // ── PLACE ORDER ──
@@ -436,19 +461,19 @@ function runMatching(newOrder) {
 
     for (const maker of candidates) {
       if (remainingTaker<=0.001) break;
-      const makerPrice = maker.price;
-      const takerCost  = parseFloat((1-makerPrice).toFixed(4));
+      const makerPrice  = maker.price;
+      const takerCost   = parseFloat((1-makerPrice).toFixed(4));
       const makerTokens = parseFloat((maker.volumeLeft/makerPrice).toFixed(6));
       const takerTokens = parseFloat((remainingTaker/takerCost).toFixed(6));
       const tradeTokens = Math.min(makerTokens,takerTokens);
       if (tradeTokens<0.001) continue;
       const makerSpends = parseFloat((tradeTokens*makerPrice).toFixed(2));
       const takerSpends = parseFloat((tradeTokens*takerCost).toFixed(2));
-      const yesOrder = newOrder.side==='yes'?newOrder:maker;
-      const noOrder  = newOrder.side==='no' ?newOrder:maker;
+      const yesOrder  = newOrder.side==='yes'?newOrder:maker;
+      const noOrder   = newOrder.side==='no' ?newOrder:maker;
       const yesSpends = newOrder.side==='yes'?takerSpends:makerSpends;
       const noSpends  = newOrder.side==='no' ?takerSpends:makerSpends;
-      const tradeRef = db.ref('trades').push();
+      const tradeRef  = db.ref('trades').push();
       updates['trades/'+tradeRef.key] = {
         id:tradeRef.key, userYes:yesOrder.user, userNo:noOrder.user,
         priceYes:yesOrder.price, priceNo:noOrder.price, tradePrice:makerPrice,
@@ -460,10 +485,7 @@ function runMatching(newOrder) {
       updates['orders/'+maker.id+'/volumeLeft'] = Math.max(0,makerLeft);
       updates['orders/'+maker.id+'/status']     = makerLeft<=0.01?'filled':'partial';
       remainingTaker = parseFloat((remainingTaker-takerSpends).toFixed(2));
-      toasts.push('Trade: '+fmt(tradeTokens.toFixed(2))+' token @ €'+makerPrice.toFixed(2));
-
-      // Aggiorna saldo locale se sono il taker E il maker ha ricevuto un rimborso
-      // (il rimborso del maker lo gestiamo lato control room alla risoluzione)
+      toasts.push('Trade: '+parseFloat(tradeTokens.toFixed(2))+' token @ €'+makerPrice.toFixed(2));
     }
 
     const takerLeft = Math.max(0,remainingTaker);
@@ -476,14 +498,13 @@ function runMatching(newOrder) {
 }
 
 function isCompatible(taker,maker) {
-  const pSì = taker.side==='yes'?taker.price:maker.price;
-  const pNo  = taker.side==='no' ?taker.price:maker.price;
-  return (pSì+pNo)>=1.0-0.0001;
+  const pSi = taker.side==='yes'?taker.price:maker.price;
+  const pNo = taker.side==='no' ?taker.price:maker.price;
+  return (pSi+pNo)>=1.0-0.0001;
 }
 
 // ── RISOLUZIONE ──
 function showResolution(res) {
-  // Calcola guadagni dai trade
   db.ref('trades').once('value').then(snap => {
     const trades = snap.val() ? Object.values(snap.val()) : [];
     let winnings = 0;
@@ -491,7 +512,6 @@ function showResolution(res) {
       if (res.winner==='yes' && t.userYes===userName) winnings += t.tokens;
       if (res.winner==='no'  && t.userNo ===userName) winnings += t.tokens;
     });
-    // Rimborsa ordini ancora aperti
     db.ref('orders').once('value').then(snap2 => {
       const orders = snap2.val() ? Object.values(snap2.val()) : [];
       let refund = 0;
