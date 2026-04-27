@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PredictIT</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f2eb;--paper:#faf8f3;--ink:#1a1714;--ink2:#4a4540;--ink3:#8a8278;
+  --rule:#d4cec4;
+  --yes:#1a6b3a;--yes-bg:#eaf4ee;--yes-border:#b8ddc4;
+  --no:#8b1a1a;--no-bg:#f6eaea;--no-border:#ddb8b8;
+  --accent:#c4860a;--accent-bg:#fdf3e0;
+  --radius:8px;
+}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:14px;min-height:100vh;padding-bottom:40px}
+
+/* OVERLAY NICKNAME */
+.overlay{position:fixed;inset:0;background:rgba(26,23,20,0.88);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.overlay-card{background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius);padding:28px 22px;width:100%;max-width:340px;text-align:center}
+.overlay-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--ink);margin-bottom:4px}
+.overlay-sub{color:var(--ink3);font-size:12px;margin-bottom:20px;line-height:1.7}
+.overlay-field input{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:18px;padding:12px 14px;outline:none;text-align:center}
+.overlay-field input:focus{border-color:var(--accent)}
+.btn-enter{width:100%;margin-top:12px;padding:14px;border-radius:var(--radius);border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500}
+
+/* RESOLVED OVERLAY */
+.resolved-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:300;padding:20px;flex-direction:column;text-align:center}
+.resolved-overlay.show{display:flex}
+.resolved-overlay.yes-win{background:rgba(26,107,58,0.95)}
+.resolved-overlay.no-win{background:rgba(139,26,26,0.95)}
+.resolved-emoji{font-size:64px;margin-bottom:16px}
+.resolved-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#fff;margin-bottom:8px}
+.resolved-sub{color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:24px;line-height:1.6}
+.resolved-balance{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:#fff;margin-bottom:6px}
+.resolved-bal-label{color:rgba(255,255,255,0.7);font-size:12px}
+
+/* HEADER */
+.header{background:var(--paper);border-bottom:2px solid var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--ink)}
+.header-balance{text-align:right}
+.balance-label{font-size:10px;color:var(--ink3);letter-spacing:0.5px}
+.balance-amount{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--accent)}
+
+/* MAIN */
+.main{padding:18px 16px;max-width:480px;margin:0 auto}
+
+/* QUESTION */
+.question-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.q-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:500}
+.q-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;line-height:1.35;color:var(--ink);margin-bottom:14px}
+.prob-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.prob-pct{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;min-width:46px}
+.prob-pct.yes{color:var(--yes)}.prob-pct.no{color:var(--no);text-align:right}
+.bar-track{flex:1;height:7px;background:var(--no-bg);border:1px solid var(--no-border);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;background:var(--yes);border-radius:99px;transition:width 0.5s cubic-bezier(.4,0,.2,1)}
+.prob-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3)}
+
+/* SIDE SELECTOR */
+.side-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.side-btn{padding:16px 10px;border-radius:var(--radius);border:2px solid;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;text-align:center;transition:all 0.15s;background:var(--paper)}
+.side-btn.yes{border-color:var(--yes-border);color:var(--yes)}
+.side-btn.yes.active{background:var(--yes);color:#fff;border-color:var(--yes)}
+.side-btn.no{border-color:var(--no-border);color:var(--no)}
+.side-btn.no.active{background:var(--no);color:#fff;border-color:var(--no)}
+.side-btn-label{font-size:11px;opacity:0.75;margin-top:4px}
+.side-best-price{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-top:3px}
+
+/* ORDER FORM */
+.order-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;font-weight:500}
+
+.best-banner{display:none;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--radius);border:1px solid;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.best-banner.yes{background:var(--yes-bg);border-color:var(--yes-border)}
+.best-banner.no{background:var(--no-bg);border-color:var(--no-border)}
+.bb-left{}
+.bb-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+.bb-label.yes{color:var(--yes)}.bb-label.no{color:var(--no)}
+.bb-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.bb-price.yes{color:var(--yes)}.bb-price.no{color:var(--no)}
+.bb-cta{font-size:11px;color:var(--ink3)}
+
+.field{margin-bottom:12px}
+.field-label{font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;display:block}
+.input-wrap{position:relative}
+.input-prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none}
+.input-suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:11px;pointer-events:none}
+input[type=number]{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:18px;padding:12px 40px 12px 28px;outline:none;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{display:none}
+input[type=number]:focus{border-color:var(--accent)}
+
+.summary{background:var(--bg);border:1px solid var(--rule);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:12px}
+.sum-row{display:flex;justify-content:space-between;padding:3px 0}
+.sum-row:not(:last-child){border-bottom:1px dashed var(--rule)}
+.sum-key{color:var(--ink3)}
+.sum-val{font-weight:500}
+.sum-val.yes{color:var(--yes)}.sum-val.no{color:var(--no)}
+
+.btn-order{width:100%;padding:15px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;transition:all 0.15s}
+.btn-order.yes{background:var(--yes);color:#fff}
+.btn-order.no{background:var(--no);color:#fff}
+.btn-order:disabled{opacity:0.35;cursor:not-allowed}
+.err{font-size:11px;color:var(--no);margin-top:6px;min-height:16px}
+
+/* MY ORDERS */
+.my-orders-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.mo-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
+.mo-row:last-child{border-bottom:none}
+.mo-side{font-size:11px;font-weight:500;padding:2px 8px;border-radius:3px}
+.mo-side.yes{background:var(--yes-bg);color:var(--yes)}
+.mo-side.no{background:var(--no-bg);color:var(--no)}
+.mo-info{font-size:12px;color:var(--ink2);flex:1;margin:0 10px}
+.mo-status{font-size:10px;color:var(--ink3)}
+.mo-cancel{font-size:11px;color:var(--no);background:none;border:none;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:10px 18px;font-size:13px;line-height:1.5;opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);z-index:500;pointer-events:none;width:calc(100% - 32px);max-width:360px;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-title{font-weight:500}
+.toast-sub{font-size:11px;opacity:0.7;margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- NICKNAME OVERLAY -->
+<div class="overlay" id="nick-overlay">
+  <div class="overlay-card">
+    <div class="overlay-logo">PredictIT</div>
+    <div class="overlay-sub">Mercato di predizione in tempo reale.<br>Scegli un nickname.</div>
+    <div class="overlay-field">
+      <input type="text" id="nick-input" maxlength="20" placeholder="Il tuo nome..."
+        autofocus onkeydown="if(event.key==='Enter')enterMarket()">
+    </div>
+    <button class="btn-enter" onclick="enterMarket()">Entra →</button>
+  </div>
+</div>
+
+<!-- RESOLVED OVERLAY -->
+<div class="resolved-overlay" id="resolved-overlay">
+  <div class="resolved-emoji" id="resolved-emoji">🏆</div>
+  <div class="resolved-title" id="resolved-title">Evento risolto!</div>
+  <div class="resolved-sub" id="resolved-sub"></div>
+  <div class="resolved-balance" id="resolved-balance"></div>
+  <div class="resolved-bal-label">Saldo finale</div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">PredictIT</div>
+  <div class="header-balance">
+    <div class="balance-label">SALDO</div>
+    <div class="balance-amount" id="balance-display">€ 100,00</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- DOMANDA + PROB -->
+  <div class="question-card">
+    <div class="q-label">⚽ Serie A · 2025/26</div>
+    <div class="q-text">L'Inter vincerà lo Scudetto nella stagione 2025/26?</div>
+    <div class="prob-row">
+      <div class="prob-pct yes" id="pct-yes">—</div>
+      <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:50%"></div></div>
+      <div class="prob-pct no" id="pct-no">—</div>
+    </div>
+    <div class="prob-labels"><span>◆ Sì</span><span>No ◆</span></div>
+  </div>
+
+  <!-- SCELTA ESITO -->
+  <div class="side-selector">
+    <div class="side-btn yes active" id="side-yes" onclick="selectSide('yes')">
+      <div>◆ Sì</div>
+      <div class="side-best-price yes" id="side-price-yes">—</div>
+      <div class="side-btn-label">miglior prezzo</div>
+    </div>
+    <div class="side-btn no" id="side-no" onclick="selectSide('no')">
+      <div>◆ No</div>
+      <div class="side-best-price no" id="side-price-no">—</div>
+      <div class="side-btn-label">miglior prezzo</div>
+    </div>
+  </div>
+
+  <!-- FORM ORDINE -->
+  <div class="order-card">
+    <div class="card-title" id="form-title">Inserisci ordine — Sì</div>
+
+    <!-- BEST PRICE BANNER -->
+    <div class="best-banner yes" id="best-banner" onclick="useBestPrice()">
+      <div class="bb-left">
+        <div class="bb-label yes" id="bb-label">Miglior prezzo disponibile</div>
+        <div class="bb-price yes" id="bb-price">—</div>
+      </div>
+      <div class="bb-cta">Tocca per<br>usarlo →</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Prezzo limite (€ per vincere €1)</label>
+      <div class="input-wrap">
+        <span class="input-prefix">€</span>
+        <input type="number" id="price-input" min="0.01" max="0.99" step="0.01"
+          placeholder="0.60" oninput="updatePreview()">
+        <span class="input-suffix">/ €1</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Volume massimo (€ da spendere)</label>
+      <div class="input-wrap">
+        <span class="input-prefix">€</span>
+        <input type="number" id="volume-input" min="0.10" step="0.10"
+          placeholder="10.00" oninput="updatePreview()">
+        <span class="input-suffix">max</span>
+      </div>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="sum-row"><span class="sum-key">Prezzo limite</span><span class="sum-val" id="s-price">—</span></div>
+      <div class="sum-row"><span class="sum-key">Spesa massima</span><span class="sum-val" id="s-vol">—</span></div>
+      <div class="sum-row"><span class="sum-key">Guadagno max</span><span class="sum-val" id="s-win">—</span></div>
+      <div class="sum-row"><span class="sum-key">Ritorno totale</span><span class="sum-val" id="s-total">—</span></div>
+    </div>
+
+    <div class="err" id="err-msg"></div>
+    <button class="btn-order yes" id="btn-order" onclick="placeOrder()" disabled>
+      Conferma ordine Sì
+    </button>
+  </div>
+
+  <!-- MIEI ORDINI -->
+  <div class="my-orders-card" id="my-orders-card" style="display:none">
+    <div class="card-title">I tuoi ordini</div>
+    <div id="my-orders-list"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title"></div>
+  <div class="toast-sub" id="toast-sub"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:      "AIzaSyCZAxZLbb6lCDKeltewFNdf6dmclYj_pMI",
+  authDomain:  "predictionmarket-test.firebaseapp.com",
+  projectId:   "predictionmarket-test",
+  databaseURL: "https://predictionmarket-test-default-rtdb.europe-west1.firebasedatabase.app"
+});
+const db = firebase.database();
+
+let userName    = '';
+let myBalance   = 100;
+let mySide      = 'yes';
+let currentOrders = {};
+
+// ── ENTER ──
+function enterMarket() {
+  const nick = document.getElementById('nick-input').value.trim();
+  if (!nick) return;
+  userName = nick;
+  document.getElementById('nick-overlay').style.display = 'none';
+
+  const presRef = db.ref('presence/' + encodeURIComponent(userName) + '_' + Date.now());
+  presRef.set(true);
+  presRef.onDisconnect().remove();
+
+  db.ref('orders').on('value', snap => {
+    currentOrders = snap.val() || {};
+    updateBestPrices();
+    renderMyOrders();
+  });
+
+  db.ref('trades').on('value', snap => {
+    const trades = snap.val() ? Object.values(snap.val()).sort((a,b) => b.ts-a.ts) : [];
+    updateProb(trades);
+  });
+
+  // Ascolta risoluzione evento
+  db.ref('resolution').on('value', snap => {
+    const res = snap.val();
+    if (res && res.winner) showResolution(res);
+  });
+}
+
+// ── PROB ──
+function updateProb(trades) {
+  if (!trades.length) { setProbDisplay(0.5); return; }
+  const sy = trades.reduce((s,t) => s+(t.spentYes||0), 0);
+  const sn = trades.reduce((s,t) => s+(t.spentNo||0), 0);
+  setProbDisplay(sy+sn > 0 ? sy/(sy+sn) : 0.5);
+}
+function setProbDisplay(p) {
+  document.getElementById('pct-yes').textContent = (p*100).toFixed(1).replace('.',',')+'%';
+  document.getElementById('pct-no').textContent  = ((1-p)*100).toFixed(1).replace('.',',')+'%';
+  document.getElementById('bar-fill').style.width = (p*100).toFixed(1)+'%';
+}
+
+// ── BEST PRICES ──
+function updateBestPrices() {
+  // Miglior prezzo per comprare Sì = maker No con prezzo più basso → taker Sì paga 1-makerNo
+  const noMakers  = Object.values(currentOrders).filter(o => (o.status==='open'||o.status==='partial') && o.side==='no'  && o.user!==userName);
+  const yesMakers = Object.values(currentOrders).filter(o => (o.status==='open'||o.status==='partial') && o.side==='yes' && o.user!==userName);
+
+  const bestForYes = noMakers.length  ? Math.min(...noMakers.map(o=>o.price))  : null;
+  const bestForNo  = yesMakers.length ? Math.min(...yesMakers.map(o=>o.price)) : null;
+
+  const takerYes = bestForYes !== null ? parseFloat((1-bestForYes).toFixed(4)) : null;
+  const takerNo  = bestForNo  !== null ? parseFloat((1-bestForNo).toFixed(4))  : null;
+
+  document.getElementById('side-price-yes').textContent = takerYes !== null ? '€'+takerYes.toFixed(2).replace('.',',') : '—';
+  document.getElementById('side-price-no').textContent  = takerNo  !== null ? '€'+takerNo.toFixed(2).replace('.',',')  : '—';
+
+  updateBestBanner();
+}
+
+function updateBestBanner() {
+  const oppSide = mySide === 'yes' ? 'no' : 'yes';
+  const makers  = Object.values(currentOrders).filter(o =>
+    (o.status==='open'||o.status==='partial') && o.side===oppSide && o.user!==userName
+  );
+  const banner = document.getElementById('best-banner');
+  if (!makers.length) { banner.style.display='none'; return; }
+  const best = makers.reduce((a,b) => a.price<b.price ? a : b);
+  const takerPrice = parseFloat((1-best.price).toFixed(4));
+  banner.style.display = 'flex';
+  banner.className = 'best-banner ' + mySide;
+  document.getElementById('bb-label').className = 'bb-label ' + mySide;
+  document.getElementById('bb-price').className = 'bb-price ' + mySide;
+  document.getElementById('bb-price').textContent = '€\u00a0'+takerPrice.toFixed(2).replace('.',',')+' / €1';
+  banner.dataset.price = takerPrice;
+}
+
+function useBestPrice() {
+  const price = parseFloat(document.getElementById('best-banner').dataset.price);
+  if (!price) return;
+  document.getElementById('price-input').value = price.toFixed(2);
+  updatePreview();
+  document.getElementById('volume-input').focus();
+}
+
+// ── SIDE ──
+function selectSide(side) {
+  mySide = side;
+  document.getElementById('side-yes').className = 'side-btn yes' + (side==='yes'?' active':'');
+  document.getElementById('side-no').className  = 'side-btn no'  + (side==='no' ?' active':'');
+  document.getElementById('form-title').textContent = 'Inserisci ordine — ' + (side==='yes'?'Sì':'No');
+  const btn = document.getElementById('btn-order');
+  btn.className = 'btn-order ' + side;
+  btn.textContent = 'Conferma ordine ' + (side==='yes'?'Sì':'No');
+  document.getElementById('price-input').value  = '';
+  document.getElementById('volume-input').value = '';
+  document.getElementById('err-msg').textContent = '';
+  btn.disabled = true;
+  clearSummary();
+  updateBestBanner();
+}
+
+// ── PREVIEW ──
+function updatePreview() {
+  const price  = parseFloat(document.getElementById('price-input').value);
+  const volume = parseFloat(document.getElementById('volume-input').value);
+  const btn    = document.getElementById('btn-order');
+  if (!price||!volume||price<=0||price>=1||volume<=0) { clearSummary(); btn.disabled=true; return; }
+  const maxWin = volume*(1-price)/price;
+  const cls = mySide;
+  setEl('s-price', '€\u00a0'+price.toFixed(2).replace('.',',')+' / €1', cls);
+  setEl('s-vol',   fmt(volume), cls);
+  setEl('s-win',   fmt(maxWin), cls);
+  setEl('s-total', fmt(volume+maxWin));
+  btn.disabled = false;
+}
+function clearSummary() {
+  ['s-price','s-vol','s-win','s-total'].forEach(id => { document.getElementById(id).textContent='—'; document.getElementById(id).className='sum-val'; });
+}
+
+// ── PLACE ORDER ──
+function placeOrder() {
+  if (!userName) return;
+  const price  = parseFloat(document.getElementById('price-input').value);
+  const volume = parseFloat(document.getElementById('volume-input').value);
+  const errEl  = document.getElementById('err-msg');
+  errEl.textContent = '';
+  if (!price||price<=0||price>=1) { errEl.textContent='Prezzo non valido (0–1).'; return; }
+  if (!volume||volume<=0)         { errEl.textContent='Volume non valido.'; return; }
+  if (volume > myBalance)         { errEl.textContent='Saldo insufficiente ('+fmt(myBalance)+').'; return; }
+
+  const orderRef = db.ref('orders').push();
+  const order = {
+    id: orderRef.key, user: userName, side: mySide,
+    price: parseFloat(price.toFixed(4)),
+    volumeTotal: parseFloat(volume.toFixed(2)),
+    volumeLeft:  parseFloat(volume.toFixed(2)),
+    ts: Date.now(), status: 'open'
+  };
+
+  myBalance = parseFloat((myBalance-volume).toFixed(2));
+  document.getElementById('balance-display').textContent = fmt(myBalance);
+  document.getElementById('price-input').value  = '';
+  document.getElementById('volume-input').value = '';
+  document.getElementById('btn-order').disabled = true;
+  clearSummary();
+
+  orderRef.set(order).then(() => {
+    runMatching(order);
+    showToast('Ordine inserito', (mySide==='yes'?'Sì':'No')+' · €'+price.toFixed(2)+'/€1 · max '+fmt(volume));
+  });
+}
+
+// ── MATCHING ──
+function runMatching(newOrder) {
+  db.ref('orders').once('value').then(snap => {
+    const all = snap.val() || {};
+    const oppSide = newOrder.side==='yes'?'no':'yes';
+    const candidates = Object.values(all)
+      .filter(o => (o.status==='open'||o.status==='partial') && o.side===oppSide && o.user!==newOrder.user && isCompatible(newOrder,o))
+      .sort((a,b) => a.price!==b.price ? a.price-b.price : a.ts-b.ts);
+    if (!candidates.length) return;
+
+    let remainingTaker = newOrder.volumeLeft;
+    const updates = {};
+    const toasts  = [];
+
+    for (const maker of candidates) {
+      if (remainingTaker<=0.001) break;
+      const makerPrice = maker.price;
+      const takerCost  = parseFloat((1-makerPrice).toFixed(4));
+      const makerTokens = parseFloat((maker.volumeLeft/makerPrice).toFixed(6));
+      const takerTokens = parseFloat((remainingTaker/takerCost).toFixed(6));
+      const tradeTokens = Math.min(makerTokens,takerTokens);
+      if (tradeTokens<0.001) continue;
+      const makerSpends = parseFloat((tradeTokens*makerPrice).toFixed(2));
+      const takerSpends = parseFloat((tradeTokens*takerCost).toFixed(2));
+      const yesOrder = newOrder.side==='yes'?newOrder:maker;
+      const noOrder  = newOrder.side==='no' ?newOrder:maker;
+      const yesSpends = newOrder.side==='yes'?takerSpends:makerSpends;
+      const noSpends  = newOrder.side==='no' ?takerSpends:makerSpends;
+      const tradeRef = db.ref('trades').push();
+      updates['trades/'+tradeRef.key] = {
+        id:tradeRef.key, userYes:yesOrder.user, userNo:noOrder.user,
+        priceYes:yesOrder.price, priceNo:noOrder.price, tradePrice:makerPrice,
+        spentYes:yesSpends, spentNo:noSpends,
+        tokens:parseFloat(tradeTokens.toFixed(4)),
+        amount:parseFloat((makerSpends+takerSpends).toFixed(2)), ts:Date.now()
+      };
+      const makerLeft = parseFloat((maker.volumeLeft-makerSpends).toFixed(2));
+      updates['orders/'+maker.id+'/volumeLeft'] = Math.max(0,makerLeft);
+      updates['orders/'+maker.id+'/status']     = makerLeft<=0.01?'filled':'partial';
+      remainingTaker = parseFloat((remainingTaker-takerSpends).toFixed(2));
+      toasts.push('Trade: '+fmt(tradeTokens.toFixed(2))+' token @ €'+makerPrice.toFixed(2));
+
+      // Aggiorna saldo locale se sono il taker E il maker ha ricevuto un rimborso
+      // (il rimborso del maker lo gestiamo lato control room alla risoluzione)
+    }
+
+    const takerLeft = Math.max(0,remainingTaker);
+    updates['orders/'+newOrder.id+'/volumeLeft'] = takerLeft;
+    updates['orders/'+newOrder.id+'/status']     = takerLeft<=0.01?'filled':takerLeft<newOrder.volumeLeft?'partial':'open';
+    db.ref().update(updates).then(() => {
+      if (toasts.length) showToast('✓ Match!', toasts[toasts.length-1]);
+    });
+  });
+}
+
+function isCompatible(taker,maker) {
+  const pSì = taker.side==='yes'?taker.price:maker.price;
+  const pNo  = taker.side==='no' ?taker.price:maker.price;
+  return (pSì+pNo)>=1.0-0.0001;
+}
+
+// ── RISOLUZIONE ──
+function showResolution(res) {
+  // Calcola guadagni dai trade
+  db.ref('trades').once('value').then(snap => {
+    const trades = snap.val() ? Object.values(snap.val()) : [];
+    let winnings = 0;
+    trades.forEach(t => {
+      if (res.winner==='yes' && t.userYes===userName) winnings += t.tokens;
+      if (res.winner==='no'  && t.userNo ===userName) winnings += t.tokens;
+    });
+    // Rimborsa ordini ancora aperti
+    db.ref('orders').once('value').then(snap2 => {
+      const orders = snap2.val() ? Object.values(snap2.val()) : [];
+      let refund = 0;
+      orders.forEach(o => {
+        if (o.user===userName && (o.status==='open'||o.status==='partial')) refund += o.volumeLeft;
+      });
+      const finalBalance = parseFloat((myBalance + winnings + refund).toFixed(2));
+      const ol = document.getElementById('resolved-overlay');
+      ol.className = 'resolved-overlay show ' + (res.winner==='yes'?'yes-win':'no-win');
+      document.getElementById('resolved-emoji').textContent   = winnings > 0 ? '🏆' : '😔';
+      document.getElementById('resolved-title').textContent   = res.winner==='yes' ? 'Sì ha vinto!' : 'No ha vinto!';
+      document.getElementById('resolved-sub').textContent     = winnings > 0
+        ? 'Hai vinto! Incassi €'+winnings.toFixed(2)+' dai tuoi token.'
+        : 'Hai perso le tue scommesse sull\'esito sbagliato.';
+      document.getElementById('resolved-balance').textContent = fmt(finalBalance);
+    });
+  });
+}
+
+// ── RENDER MY ORDERS ──
+function renderMyOrders() {
+  if (!userName) return;
+  const mine = Object.values(currentOrders).filter(o => o.user===userName && o.status!=='cancelled');
+  const card = document.getElementById('my-orders-card');
+  if (!mine.length) { card.style.display='none'; return; }
+  card.style.display = 'block';
+  document.getElementById('my-orders-list').innerHTML = mine.sort((a,b)=>b.ts-a.ts).map(o => {
+    const statusLabel = o.status==='filled'?'✓ eseguito':o.status==='partial'?'~ parziale':'⏳ in attesa';
+    return `<div class="mo-row">
+      <span class="mo-side ${o.side}">${o.side==='yes'?'Sì':'No'}</span>
+      <span class="mo-info">€${o.price.toFixed(2)}/€1 · rimasto ${fmt(o.volumeLeft)}</span>
+      <span class="mo-status">${statusLabel}</span>
+      ${o.status==='open'||o.status==='partial' ? `<button class="mo-cancel" onclick="cancelOrder('${esc(o.id)}')">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function cancelOrder(id) {
+  db.ref('orders/'+id).once('value').then(snap => {
+    const o = snap.val();
+    if (!o||o.user!==userName) return;
+    myBalance = parseFloat((myBalance+o.volumeLeft).toFixed(2));
+    document.getElementById('balance-display').textContent = fmt(myBalance);
+    db.ref('orders/'+id+'/status').set('cancelled');
+    showToast('Ordine annullato', 'Rimborso '+fmt(o.volumeLeft));
+  });
+}
+
+// ── UTILS ──
+function fmt(v){ return '€\u00a0'+(Math.round(v*100)/100).toFixed(2).replace('.',','); }
+function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function setEl(id,val,cls=''){ const el=document.getElementById(id); el.textContent=val; el.className='sum-val '+cls; }
+function showToast(title,sub){
+  document.getElementById('toast-title').textContent=title;
+  document.getElementById('toast-sub').textContent=sub||'';
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+</script>
+</body>
+</html>
