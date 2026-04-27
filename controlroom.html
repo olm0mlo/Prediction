@@ -526,7 +526,7 @@ function confirmReset() {
 function executeReset() {
   closeModal();
 
-  // Azzera UI immediatamente senza aspettare i listener Firebase
+  // Azzera UI immediatamente
   allOrders = {};
   allTrades = [];
   renderBook({});
@@ -542,13 +542,15 @@ function executeReset() {
   document.getElementById('res-btn-no').disabled     = false;
   document.getElementById('resolution-status').textContent = '';
 
-  db.ref().update({
-    orders:     null,
-    trades:     null,
-    users:      null,
-    resolution: null,
-    presence:   null,
-    sessionId:  Date.now()
+  // Usa remove() su ogni nodo separatamente — piu' affidabile di update({nodo: null})
+  Promise.all([
+    db.ref('orders').remove(),
+    db.ref('trades').remove(),
+    db.ref('users').remove(),
+    db.ref('resolution').remove(),
+    db.ref('presence').remove()
+  ]).then(() => {
+    return db.ref('sessionId').set(Date.now());
   }).then(() => {
     showToast('Database azzerato', 'Tutti gli utenti dovranno reinserire il nome');
   });
