@@ -315,6 +315,14 @@ db.ref('orders').on('value', snap => {
   allOrders = snap.val() || {};
   renderBook(allOrders);
   updateStats(allOrders);
+  // Se il db e' stato azzerato (null), azzera anche trade e UI correlata
+  if (!snap.val()) {
+    allTrades = [];
+    renderTrades([]);
+    updateProb([]);
+    document.getElementById('stat-trades').textContent = '0';
+    document.getElementById('stat-vol').textContent    = '€ 0';
+  }
   renderLeaderboard();
 });
 
@@ -324,7 +332,7 @@ db.ref('trades').on('value', snap => {
   updateProb(allTrades);
   document.getElementById('stat-trades').textContent = allTrades.length;
   const vol = allTrades.reduce((s,t)=>s+t.amount,0);
-  document.getElementById('stat-vol').textContent = '€\u00a0'+vol.toFixed(0);
+  document.getElementById('stat-vol').textContent = '€ '+vol.toFixed(0);
   renderLeaderboard();
 });
 
